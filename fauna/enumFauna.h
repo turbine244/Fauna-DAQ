@@ -1,0 +1,12 @@
+#ifndef ENUM_FAUNA
+#define ENUM_FAUNA
+
+enum
+{
+	FAUNA_AUTO = 0,
+
+	FAUNA_STATE_READY = 0,
+	FAUNA_STATE_RUNNING,
+};
+
+#endif
