@@ -8,3 +8,5 @@
 
 ~ Dependancy : NI-DAQmx (HW/SW)<br>
 ~ Target use : Real-Time Stream/Process<br>
+
+https://docs.google.com/spreadsheets/d/1KLRtFNdBHT50zrA-3_1XFda7VyMcRptcNC1uEmzhP7o/edit?usp=sharing
