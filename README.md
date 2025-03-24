@@ -1,4 +1,6 @@
-# Fauna : DAQ task handler
+# Fauna : DAQ task handler (Internal Signal Process)
+
+!! Branched out from Master-1.0.0; for a special purpose<br>
 
 ~ Current Version : 1.0.0<br>
 
