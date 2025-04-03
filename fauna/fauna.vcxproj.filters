@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\_def">
+      <UniqueIdentifier>{5ff01479-7898-4253-b550-d0136b40968c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\trickbag">
+      <UniqueIdentifier>{06060354-d6a2-4013-b970-a7be959808b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\trickbag">
+      <UniqueIdentifier>{95a20a94-62f0-4cae-bc69-fe7b2dc1b870}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="fauna.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="typedefFauna.h">
+      <Filter>Header Files\_def</Filter>
+    </ClInclude>
+    <ClInclude Include="tb_string.h">
+      <Filter>Header Files\trickbag</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="fauna.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tb_string.cpp">
+      <Filter>Source Files\trickbag</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
