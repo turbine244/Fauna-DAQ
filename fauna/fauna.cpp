@@ -15,7 +15,7 @@ using namespace std;
 
 //====----====----====----====----====----====----====----====----VAL
 
-#define FAUNA_VOLTRANGE 5.0
+
 
 //====----====----====----====----====----====----====----====----VAR
 
@@ -199,7 +199,7 @@ int fauna_tell_listStreamChannel(std::string& nameDevice, std::vector<std::strin
 
 
 
-int fauna_do_insert_streamDevice(std::string& nameDevice, double customSps, int customSpb, std::vector<std::string>& listChannel)
+int fauna_do_insert_streamDevice(std::string& nameDevice, double customBias, double customSps, int customSpb, std::vector<std::string>& listChannel)
 {
   // State Lock : READY
   if (myState != FAUNA_STATE_READY)
@@ -216,24 +216,24 @@ int fauna_do_insert_streamDevice(std::string& nameDevice, double customSps, int 
     return -0xFF;
   }
 
-  listStreamParam.insert({ nameDevice, { customSps, customSpb } });
+  int ret = 0;
 
-  if (listStreamChannel.find(nameDevice) == listStreamChannel.end())
+  // Param insertion
+  if (listStreamParam.find(nameDevice) != listStreamParam.end())
   {
-    listStreamChannel.insert({ nameDevice, listChannel });
-    return 0;
+    ret += 0x0100;
   }
-  else
+  listStreamParam.insert({ nameDevice, { customBias, customSps, customSpb } });
+
+  // Channel insertion
+  if (listStreamChannel.find(nameDevice) != listStreamChannel.end())
   {
-    for (auto& dev : listStreamChannel)
-    {
-      if (dev.first == nameDevice)
-      {
-        dev.second.assign(listChannel.begin(), listChannel.end());
-        return 1;
-      }
-    }
+    listStreamChannel[nameDevice].clear();
+    ret += 0x0001;
   }
+  listStreamChannel.insert({nameDevice, listChannel});
+  
+  return ret;
 }
 
 int fauna_do_erase_streamDevice(std::string& nameDevice)
@@ -421,7 +421,7 @@ int _create_DAQTaskset()
   // MAYBE LATER (ASSUMED SAFE)
 
   // Task Creation
-  TaskHandle* newTask;
+  TaskHandle* newTask;        
   int32 error;
 
   for (auto& dev : listStreamParam)
@@ -444,7 +444,7 @@ int _create_DAQTaskset()
     if (true)
     {
       string physicalChannel = _str_physicalChannel(listStreamChannel[dev.first]);
-      error = DAQmxCreateAIVoltageChan(*newTask, physicalChannel.c_str(), "", DAQmx_Val_Cfg_Default, -FAUNA_VOLTRANGE, FAUNA_VOLTRANGE, DAQmx_Val_Volts, NULL);
+      error = DAQmxCreateAIVoltageChan(*newTask, physicalChannel.c_str(), "", DAQmx_Val_Cfg_Default, -dev.second.bias, dev.second.bias, DAQmx_Val_Volts, NULL);
     }
     if (error != 0)
     {

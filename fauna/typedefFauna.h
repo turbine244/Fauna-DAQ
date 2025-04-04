@@ -7,6 +7,7 @@
 
 typedef struct STREAMPARAM
 {
+  double bias;
   double sps;
   int spb;
 };
