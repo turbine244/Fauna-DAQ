@@ -5,6 +5,6 @@
 ~ Release form : DLL<br>
 
 ~ Dependancy : NI-DAQmx (HW/SW)<br>
-~ Target use : Real-Time Stream/Process<br>
+~ Target use : Real-Time Data Stream for NI-DAQ Analog Input devices<br>
 
 https://docs.google.com/spreadsheets/d/1KLRtFNdBHT50zrA-3_1XFda7VyMcRptcNC1uEmzhP7o/edit?usp=sharing
