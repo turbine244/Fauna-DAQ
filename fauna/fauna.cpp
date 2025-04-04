@@ -1,6 +1,7 @@
 #include "fauna.h"
 
 #include <set>
+#include <algorithm>
 #include <unordered_map>
 #include <iostream>
 #include <utility>
@@ -104,7 +105,7 @@ int fauna_tell_listChannel(std::string& nameDevice, std::vector<std::string>* _l
   return ret;
 }
 
-int fauna_tell_deviceSpsRange(std::string& nameDevice, double* _minSps, double* _maxSps)
+int fauna_tell_rangeSps(std::string& nameDevice, double* _minSps, double* _maxSps)
 {
   double min, max;
 
@@ -120,6 +121,35 @@ int fauna_tell_deviceSpsRange(std::string& nameDevice, double* _minSps, double* 
 
   *_minSps = min;
   *_maxSps = max;
+  return 0;
+}
+
+int fauna_tell_listBias(std::string& nameDevice, std::vector<double>* _listBias)
+{
+  int32 bufferSize = 2;
+  float64* buffer = new float64[bufferSize]{ 0 };
+  while (DAQmxGetDevAIVoltageRngs(nameDevice.c_str(), buffer, bufferSize) != 0)
+  {
+    delete[] buffer;
+    bufferSize *= 2;
+    buffer = new float64[bufferSize];
+  }
+
+  for (int i = 0; i + 1 < bufferSize; i += 2)
+  {
+    double minVal = buffer[i];
+    double maxVal = buffer[i + 1];
+
+    if (minVal == 0.0 && maxVal == 0.0)
+      break;
+
+    if (std::abs(minVal) == std::abs(maxVal))
+    {
+      _listBias->push_back(maxVal);
+    }
+  }
+
+  delete[] buffer;
   return 0;
 }
 

@@ -55,15 +55,27 @@ int scenario1()
   }
   cout << endl;
 
-  // fauna_tell_deviceSpsRange
-  cout << "!! Range of Sps : " << endl;
+  // fauna_tell_rangeSps & fauna_tell_listBias
+  cout << "!! Device Specs : " << endl;
   for (string dev : listDevice)
   {
+    cout << dev << endl;
+    
     double minSps{ 0 }, maxSps{ 0 };
-    fauna_tell_deviceSpsRange(dev, &minSps, &minSps);
+    fauna_tell_rangeSps(dev, &minSps, &minSps);
+    
+    cout << "¤¤SPS Range : from " << minSps << " Hz to " << maxSps << " Hz" << endl;
 
-    cout << dev << " : from " << minSps << " Hz to " << maxSps << " Hz" << endl;
+    vector<double> listBias;
+    fauna_tell_listBias(dev, &listBias);
+
+    cout << "¤¤BIAS Candidates(got " << listBias.size() << ")" << endl;
+    for (double bias : listBias)
+    {
+      cout << " ¤¤" << bias << "V" << endl;
+    }
   }
+
   cout << endl;
 
   // fauna_do_insert_streamDevice
@@ -190,7 +202,7 @@ int scenario1()
       fauna_tell_state(&stateCode);
     }
 
-    int secCnt = 10;
+    int secCnt = 1;
     while (secCnt--)
     {
       fauna_tell_buffer(listDevice[0], 0, retailBuffer, &numSamplesRead);
