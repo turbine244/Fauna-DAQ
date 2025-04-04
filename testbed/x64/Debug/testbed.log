@@ -1,2 +1,6 @@
 ﻿  main.cpp
+C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(21,16): warning C4091: 'typedef ': ignored on left of 'STREAMPARAM' when no variable is declared
+  (compiling source file 'main.cpp')
+  
+C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\testbed\main.cpp(77,21): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
   testbed.vcxproj -> C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\x64\Debug\testbed.exe

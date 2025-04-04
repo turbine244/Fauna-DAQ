@@ -1,60 +1,60 @@
 ﻿  fauna.cpp
-C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\typedefFauna.h(8,16): warning C4091: 'typedef ': ignored on left of 'STREAMPARAM' when no variable is declared
+C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(21,16): warning C4091: 'typedef ': ignored on left of 'STREAMPARAM' when no variable is declared
   (compiling source file 'fauna.cpp')
   
-C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\typedefFauna.h(14,16): warning C4091: 'typedef ': ignored on left of 'BUFFERINFO' when no variable is declared
+C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\typedefFauna.h(8,16): warning C4091: 'typedef ': ignored on left of 'BUFFERINFO' when no variable is declared
   (compiling source file 'fauna.cpp')
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(59,5): warning C4273: 'fauna_tell_state': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(24,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(31,31):
       see previous definition of 'fauna_tell_state'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(65,5): warning C4273: 'fauna_tell_listDevice': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(27,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(34,31):
       see previous definition of 'fauna_tell_listDevice'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(90,5): warning C4273: 'fauna_tell_listChannel': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(28,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(35,31):
       see previous definition of 'fauna_tell_listChannel'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(108,5): warning C4273: 'fauna_tell_rangeSps': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(29,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(36,31):
       see previous definition of 'fauna_tell_rangeSps'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(127,5): warning C4273: 'fauna_tell_listBias': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(30,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(37,31):
       see previous definition of 'fauna_tell_listBias'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(158,5): warning C4273: 'fauna_tell_listStreamDevice': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(33,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(41,31):
       see previous definition of 'fauna_tell_listStreamDevice'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(184,5): warning C4273: 'fauna_tell_listStreamChannel': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(34,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(42,31):
       see previous definition of 'fauna_tell_listStreamChannel'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(202,5): warning C4273: 'fauna_do_insert_streamDevice': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(35,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(44,31):
       see previous definition of 'fauna_do_insert_streamDevice'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(239,5): warning C4273: 'fauna_do_erase_streamDevice': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(36,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(45,31):
       see previous definition of 'fauna_do_erase_streamDevice'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(260,5): warning C4273: 'fauna_do_clear_streamDevice': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(37,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(46,31):
       see previous definition of 'fauna_do_clear_streamDevice'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(280,5): warning C4273: 'fauna_do_launch_stream': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(38,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(55,31):
       see previous definition of 'fauna_do_launch_stream'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(313,5): warning C4273: 'fauna_do_cease_stream': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(41,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(59,31):
       see previous definition of 'fauna_do_cease_stream'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(335,5): warning C4273: 'fauna_tell_buffer': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(42,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(60,31):
       see previous definition of 'fauna_tell_buffer'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(361,24): warning C4311: 'type cast': pointer truncation from 'int32 *' to 'int'
@@ -62,11 +62,9 @@ C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(361,24): w
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(375,24): warning C4311: 'type cast': pointer truncation from 'int32 *' to 'int'
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(375,24): warning C4302: 'type cast': truncation from 'int32 *' to 'int'
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(386,5): warning C4273: 'fauna_tell_bufferInfo': inconsistent dll linkage
-      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(43,31):
+      C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.h(61,31):
       see previous definition of 'fauna_tell_bufferInfo'
   
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(614,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(198,1): warning C4715: 'fauna_tell_listStreamChannel': not all control paths return a value
-C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\fauna\fauna.cpp(237,1): warning C4715: 'fauna_do_insert_streamDevice': not all control paths return a value
-     Creating library C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\x64\Debug\fauna.lib and object C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\x64\Debug\fauna.exp
   fauna.vcxproj -> C:\Users\labRat1304\Documents\labRat1603\Fauna_250403\x64\Debug\fauna.dll

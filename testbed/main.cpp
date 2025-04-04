@@ -57,6 +57,7 @@ int scenario1()
 
   // fauna_tell_rangeSps & fauna_tell_listBias
   cout << "!! Device Specs : " << endl;
+  int biasForTest = 0;
   for (string dev : listDevice)
   {
     cout << dev << endl;
@@ -73,6 +74,7 @@ int scenario1()
     for (double bias : listBias)
     {
       cout << " い" << bias << "V" << endl;
+      biasForTest = bias;
     }
   }
 
@@ -85,7 +87,7 @@ int scenario1()
     vector<string> listChannel = {};
     fauna_tell_listChannel(dev, &listChannel);
 
-    int ret = fauna_do_insert_streamDevice(dev, 48000, 48000, listChannel);
+    int ret = fauna_do_insert_streamDevice(dev, biasForTest, SPS, SPB, listChannel);
     if (ret == 0)
     {
       cout << dev << " engaged successfully." << endl;
@@ -103,16 +105,17 @@ int scenario1()
   if (true)
   {
     vector<string> listStreamDevice = {};
-    vector<pair<double, int>> listStreamParam = {};
+    vector<STREAMPARAM> listStreamParam = {};
 
     fauna_tell_listStreamDevice(&listStreamDevice, &listStreamParam);
 
     for (int i = 0; i < listStreamDevice.size(); i++)
     {
       cout << listStreamDevice[i] << endl;
-      cout << "いSPS : " << listStreamParam[i].first << " Hz" << endl;
-      cout << "いSPB : " << listStreamParam[i].second << " Samples" << endl;
-      cout << "いTimal Length : " << (double)listStreamParam[i].second / listStreamParam[i].first << " sec" << endl;
+      cout << "いBIAS : " << listStreamParam[i].bias << " V" << endl;
+      cout << "いSPS : " << listStreamParam[i].sps << " Hz" << endl;
+      cout << "いSPB : " << listStreamParam[i].spb << " Samples" << endl;
+      cout << "いTimal Length : " << (double)listStreamParam[i].spb / listStreamParam[i].sps << " sec" << endl;
 
       vector<string> listStreamChannel = {};
       fauna_tell_listStreamChannel(listStreamDevice[i], &listStreamChannel);
@@ -142,7 +145,7 @@ int scenario1()
     vector<string> listChannel = {};
     fauna_tell_listChannel(listDevice[0], &listChannel);
 
-    int ret = fauna_do_insert_streamDevice(listDevice[0], SPS, SPB, listChannel);
+    int ret = fauna_do_insert_streamDevice(listDevice[0], biasForTest, SPS, SPB, listChannel);
     if (ret == 0)
     {
       cout << listDevice[0] << " re-engaged successfully." << endl;

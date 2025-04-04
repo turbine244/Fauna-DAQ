@@ -155,7 +155,7 @@ int fauna_tell_listBias(std::string& nameDevice, std::vector<double>* _listBias)
 
 
 
-int fauna_tell_listStreamDevice(std::vector<std::string>* _listDevice, std::vector<std::pair<double, int>>* _listParam)
+int fauna_tell_listStreamDevice(std::vector<std::string>* _listDevice, std::vector<STREAMPARAM>* _listParam)
 {
   if (listStreamParam.empty())
   {
@@ -174,7 +174,7 @@ int fauna_tell_listStreamDevice(std::vector<std::string>* _listDevice, std::vect
 
     if (_listParam != NULL)
     {
-      _listParam->push_back({ dev.second.sps, dev.second.spb });
+      _listParam->push_back({ dev.second.bias, dev.second.sps, dev.second.spb });
     }
   }
 

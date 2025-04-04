@@ -3,16 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{13727864-122E-44B3-AAD3-97D5F862B450}|fauna\\fauna.vcxproj|C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\fauna.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{13727864-122E-44B3-AAD3-97D5F862B450}|fauna\\fauna.vcxproj|solutionrelative:fauna\\fauna.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{19D2294C-0E07-419F-97A7-11586880D7BC}|testbed\\testbed.vcxproj|C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\testbed\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{19D2294C-0E07-419F-97A7-11586880D7BC}|testbed\\testbed.vcxproj|solutionrelative:testbed\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{13727864-122E-44B3-AAD3-97D5F862B450}|fauna\\fauna.vcxproj|C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\fauna.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{13727864-122E-44B3-AAD3-97D5F862B450}|fauna\\fauna.vcxproj|solutionrelative:fauna\\fauna.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{13727864-122E-44B3-AAD3-97D5F862B450}|fauna\\fauna.vcxproj|C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\fauna.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{13727864-122E-44B3-AAD3-97D5F862B450}|fauna\\fauna.vcxproj|solutionrelative:fauna\\fauna.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{13727864-122E-44B3-AAD3-97D5F862B450}|fauna\\fauna.vcxproj|C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\typedefFauna.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{13727864-122E-44B3-AAD3-97D5F862B450}|fauna\\fauna.vcxproj|solutionrelative:fauna\\typedefFauna.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,17 +26,30 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
+              "Title": "typedefFauna.h",
+              "DocumentMoniker": "C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\typedefFauna.h",
+              "RelativeDocumentMoniker": "fauna\\typedefFauna.h",
+              "ToolTip": "C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\typedefFauna.h",
+              "RelativeToolTip": "fauna\\typedefFauna.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-04-04T17:52:32.889Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
               "Title": "main.cpp",
               "DocumentMoniker": "C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\testbed\\main.cpp",
               "RelativeDocumentMoniker": "testbed\\main.cpp",
               "ToolTip": "C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\testbed\\main.cpp",
               "RelativeToolTip": "testbed\\main.cpp",
-              "ViewState": "AgIAAJ8AAAAAAAAAAAAAAO8AAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAFoAAAAAAAAAAAAswHIAAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-04-03T07:09:34.147Z",
               "EditorCaption": ""
@@ -45,20 +62,20 @@
               "RelativeDocumentMoniker": "fauna\\fauna.cpp",
               "ToolTip": "C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\fauna.cpp",
               "RelativeToolTip": "fauna\\fauna.cpp",
-              "ViewState": "AgIAADUAAAAAAAAAAAAIwPgAAAAaAAAAAAAAAA==",
+              "ViewState": "AgIAAFkAAAAAAAAAAAAgwKkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-04-03T07:10:42.958Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "fauna.h",
               "DocumentMoniker": "C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\fauna.h",
               "RelativeDocumentMoniker": "fauna\\fauna.h",
               "ToolTip": "C:\\Users\\labRat1304\\Documents\\labRat1603\\Fauna_250403\\fauna\\fauna.h",
               "RelativeToolTip": "fauna\\fauna.h",
-              "ViewState": "AgIAABMAAAAAAAAAAAAAwCAAAACDAAAAAAAAAA==",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAACgAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-04-03T05:32:01.376Z",
               "EditorCaption": ""

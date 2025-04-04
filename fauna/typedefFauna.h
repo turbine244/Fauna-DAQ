@@ -5,13 +5,6 @@
 #include <string>
 #include <NIDAQmx.h>
 
-typedef struct STREAMPARAM
-{
-  double bias;
-  double sps;
-  int spb;
-};
-
 typedef struct BUFFERINFO
 {
   int numChannel;
