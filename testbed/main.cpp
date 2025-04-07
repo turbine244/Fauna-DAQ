@@ -10,7 +10,9 @@
 
 using namespace std;
 
+string dir = "../";
 int scenario1(); // Mere Showcase
+int scenario2(); // Quicktest : Load via file
 
 int main()
 {
@@ -19,20 +21,33 @@ int main()
 
 int scenario1()
 {
+  string fileName = "";
   int ret = 0;
+
+  // fauna_write_json_deviceInfo
+  cout << "!! Writing deviceInfo.json on : " << dir << endl;
+  fileName = "deviceInfo";
+  ret = fauna_write_json_deviceInfo(dir, fileName);
+  if (ret == 0)
+  {
+    cout << "Success!" << endl;
+  }
+  else
+  {
+    cout << "Something gone wrong.." << endl;
+    return ret;
+  }
+  cout << endl;
 
   // fauna_tell_listDevice
   cout << "!! List of Devices (with Analog Input) : " << endl;
-
   vector<string> listDevice = {};
   fauna_tell_listDevice(&listDevice);
-
   if (listDevice.size() == 0)
   {
     cout << "No device? Pathetic." << endl;
     return -1;
   }
-
   for (string dev : listDevice)
   {
     cout << dev << endl;
@@ -41,7 +56,6 @@ int scenario1()
 
   // fauna_tell_listChannel
   cout << "!! List of Analog Input Channels : " << endl;
-
   for (string dev : listDevice)
   {
     vector<string> listChannel = {};
@@ -77,7 +91,6 @@ int scenario1()
       biasForTest = bias;
     }
   }
-
   cout << endl;
 
   // fauna_do_insert_streamDevice
@@ -129,12 +142,11 @@ int scenario1()
       cout << endl;
     }
   }
+  cout << endl;
 
   // fauna_do_erase_streamDevice
-  // clear? nope..
   cout << "!! Device-Stream dis-engagement : " << endl;
   cout << "Test erase : " << listDevice[0] << "\n..." << endl;
-
   ret = fauna_do_erase_streamDevice(listDevice[0]);
   if (ret == 0)
   {
@@ -163,6 +175,21 @@ int scenario1()
   }
   cout << endl;
 
+  // fauna_write_json_deviceInfo
+  cout << "!! Writing streamInfo.json on : " << dir << endl;
+  fileName = "streamInfo";
+  ret = fauna_write_json_streamInfo(dir, fileName);
+  if (ret == 0)
+  {
+    cout << "Success!" << endl;
+  }
+  else
+  {
+    cout << "Something gone wrong.." << endl;
+    return ret;
+  }
+  cout << endl;
+
   // fauna_do_launch_stream
   cout << "!! Launching Stream" << endl;
   ret = fauna_do_launch_stream();
@@ -178,14 +205,12 @@ int scenario1()
   cout << endl;
 
   // fauna_tell_bufferInfo & fauna_tell_state & fauna_tell_buffer
-
   cout << "!! Streaming for 10secs" << endl;
   double* retailBuffer = new double[SPB] {};
   double timeOut = 0;
   bool idxBuffer = 0;
   int numSamplesRead = 0;
   string nameChannel = "";
-
   if (true)
   {
     vector<string> listChannel = {};
@@ -221,7 +246,6 @@ int scenario1()
   cout << endl;
 
   // fauna_do_cease_stream
-
   cout << "!! Disposing Stream" << endl;
   if (true)
   {
@@ -240,4 +264,10 @@ int scenario1()
   cout << endl;
 
   return 0;
+}
+
+int scenario2()
+{
+  string fileName = "streamInfo";
+  return fauna_read_json_streamInfo(dir, fileName, false);
 }

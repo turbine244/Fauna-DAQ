@@ -24,7 +24,7 @@ int _tokenize(char*& fullString, std::string delimeter, std::vector<std::string>
   return cnt;
 }
 
-std::string _str_physicalChannel(std::vector<std::string>& listChannel)
+std::string _str_physicalChannel(std::set<std::string>& listChannel)
 {
   string ret = "";
   for (string ch : listChannel)

@@ -3,15 +3,18 @@
 #include <set>
 #include <algorithm>
 #include <unordered_map>
+#include <fstream>
 #include <iostream>
 #include <utility>
 #include <thread>
 #include <NIDAQmx.h>
+#include "../_include/json.hpp"
 
 #include "typedefFauna.h"
 #include "tb_string.h"
 
 using namespace std;
+using ordered_json = nlohmann::ordered_json;
 
 //====----====----====----====----====----====----====----====----VAL
 
@@ -21,7 +24,7 @@ using namespace std;
 
 atomic<int> myState;
 unordered_map<string, STREAMPARAM> listStreamParam;
-unordered_map<string, vector<string>> listStreamChannel;
+unordered_map<string, set<string>> listStreamChannel;
 
 unordered_map<string, TaskHandle> listTaskHandle;
 unordered_map<string, BUFFERINFO> listBufferInfo;
@@ -42,9 +45,14 @@ int _kill_stream();
 int _create_bufferSystem();
 int _clear_bufferSystem();
 
+int _read_json_streamInfo(ordered_json& json_in, bool matchSerial);
+
 //==== ==== BUFFER
 int __malloc_bufferSystem();
 int __dalloc_bufferSystem();
+
+//==== Integrity
+int _check_json_streamInfo(ordered_json& json_in);
 
 //==== THREAD
 int _thread_report_buffer(std::string nameDevice);
@@ -74,7 +82,7 @@ int fauna_tell_listDevice(std::vector<std::string>* _listDevice)
   _tokenize(fullString, ", ", &temp_dev);
   delete[] fullString;
 
-  // Return devices with analog inputs
+  // Tell devices with analog inputs
   for (string dev : temp_dev)
   {
     vector<string> temp_chan;
@@ -84,7 +92,10 @@ int fauna_tell_listDevice(std::vector<std::string>* _listDevice)
     }
   }
 
-  return 0;
+  // Sort
+  sort(_listDevice->begin(), _listDevice->end());
+
+  return _listDevice->size();
 }
 
 int fauna_tell_listChannel(std::string& nameDevice, std::vector<std::string>* _listChannel)
@@ -100,9 +111,13 @@ int fauna_tell_listChannel(std::string& nameDevice, std::vector<std::string>* _l
   }
 
   // Tokenize
-  int ret = _tokenize(fullString, ", ", _listChannel);
+  _tokenize(fullString, ", ", _listChannel);
   delete[] fullString;
-  return ret;
+
+  // Sort
+  sort(_listChannel->begin(), _listChannel->end());
+
+  return _listChannel->size();
 }
 
 int fauna_tell_rangeSps(std::string& nameDevice, double* _minSps, double* _maxSps)
@@ -148,8 +163,90 @@ int fauna_tell_listBias(std::string& nameDevice, std::vector<double>* _listBias)
       _listBias->push_back(maxVal);
     }
   }
-
   delete[] buffer;
+
+  sort(_listBias->begin(), _listBias->end());
+  return _listBias->size();
+}
+
+int fauna_tell_serialCode(std::string& nameDevice, std::string* _serialCode)
+{
+  vector<string> listDev;
+  if (fauna_tell_listDevice(&listDev) <= 0)
+  {
+    return -1;
+  }
+
+  for (string dev : listDev)
+  {
+    if (dev == nameDevice)
+    {
+      uInt32 serial;
+      DAQmxGetDevSerialNum(dev.c_str(), &serial);
+      *_serialCode = to_string(serial);
+      return 0;
+    }
+  }
+
+  return -2;
+}
+
+int fauna_write_json_deviceInfo(std::string& pathDir, std::string& nameFile)
+{
+  vector<string> listDev;
+  if (fauna_tell_listDevice(&listDev) <= 0)
+  {
+    return 1;
+  }
+
+  ordered_json json_out;
+  ofstream fout(pathDir + nameFile + ".json");
+
+  if (fout.is_open() == false)
+  {
+    return -1;
+  }
+    
+  for (string dev : listDev)
+  {
+    ordered_json json_each;
+
+    string serial;
+    if (fauna_tell_serialCode(dev, &serial) != 0)
+    {
+      return -0x0101;
+    }
+
+    double minSps, maxSps;
+    if (fauna_tell_rangeSps(dev, &minSps, &maxSps) != 0)
+    {
+      return -0x0102;
+    }
+    
+    vector<double> listBias;
+    if (fauna_tell_listBias(dev, &listBias) <= 0)
+    {
+      return -0x0103;
+    }
+
+    vector<string> listChan;
+    if (fauna_tell_listChannel(dev, &listChan) <= 0)
+    {
+      return -0x0104;
+    }
+
+    json_each["serialCode"] = serial;
+    json_each["minSps"] = minSps;
+    json_each["maxSps"] = maxSps;
+    json_each["numBias"] = listBias.size();
+    json_each["numChannel"] = listChan.size();
+    json_each["listBias"] = listBias;
+    json_each["listChannel"] = listChan;
+
+    json_out[dev] = json_each;
+  }
+
+  fout << json_out.dump(2);
   return 0;
 }
 
@@ -159,7 +256,7 @@ int fauna_tell_listStreamDevice(std::vector<std::string>* _listDevice, std::vect
 {
   if (listStreamParam.empty())
   {
-    return 1;
+    return -1;
   }
 
   _listDevice->clear();
@@ -178,7 +275,9 @@ int fauna_tell_listStreamDevice(std::vector<std::string>* _listDevice, std::vect
     }
   }
 
-  return 0;
+  sort(_listDevice->begin(), _listDevice->end());
+
+  return _listDevice->size();
 }
 
 int fauna_tell_listStreamChannel(std::string& nameDevice, std::vector<std::string>* _listChannel)
@@ -195,6 +294,10 @@ int fauna_tell_listStreamChannel(std::string& nameDevice, std::vector<std::strin
       _listChannel->assign(dev.second.begin(), dev.second.end());
     }
   }
+
+  sort(_listChannel->begin(), _listChannel->end());
+
+  return _listChannel->size();
 }
 
 
@@ -231,7 +334,8 @@ int fauna_do_insert_streamDevice(std::string& nameDevice, double customBias, dou
     listStreamChannel[nameDevice].clear();
     ret += 0x0001;
   }
-  listStreamChannel.insert({nameDevice, listChannel});
+  set<string> orderedList(listChannel.begin(), listChannel.end());
+  listStreamChannel.insert({nameDevice, orderedList});
   
   return ret;
 }
@@ -274,6 +378,96 @@ int fauna_do_clear_streamDevice()
   listStreamChannel.clear();
   return 0;
 }
+
+
+
+int fauna_write_json_streamInfo(std::string& pathDir, std::string& nameFile)
+{
+  vector<string> listDev;
+  vector<STREAMPARAM> listParam;
+
+  if (fauna_tell_listStreamDevice(&listDev, &listParam) <= 0)
+  {
+    return -1;
+  }
+
+  ordered_json json_out;
+  ofstream fout(pathDir + nameFile + ".json");
+
+  if (fout.is_open() == false)
+  {
+    return -1;
+  }
+
+  for (int i = 0; i < listDev.size(); i++)
+  {
+    ordered_json json_each;
+
+    string serial;
+    if (fauna_tell_serialCode(listDev[i], &serial) != 0)
+    {
+      return -0x0101;
+    }
+
+    vector<string> listChan;
+    if (fauna_tell_listStreamChannel(listDev[i], &listChan) <= 0)
+    {
+      return -0x0102;
+    }
+
+    json_each["serialCode"] = serial;
+    json_each["spb"] = listParam[i].spb;
+    json_each["sps"] = listParam[i].sps;
+    json_each["bias"] = listParam[i].bias;
+    json_each["numChannel"] = listChan.size();
+    json_each["listChannel"] = listChan;
+
+    json_out[listDev[i]] = json_each;
+  }
+
+  fout << json_out.dump(2);
+  return 0;
+}
+
+int fauna_read_json_streamInfo(std::string& pathDir, std::string& nameFile, bool matchSerial)
+{
+  // State Lock : READY
+  if (myState != FAUNA_STATE_READY)
+  {
+    return -0xFFFF;
+  }
+
+  // File open
+  ifstream fin(pathDir + nameFile + ".json");
+  if (fin.is_open() == false)
+  {
+    return -1;
+  }
+
+  // Json parsing
+  ordered_json json_in;
+  try
+  {
+    fin >> json_in;
+  }
+  catch (const ordered_json::parse_error& e)
+  {
+    return -2;
+  }
+  catch (const std::exception& e) {
+    return -3;
+  }
+
+  // Integrity Check
+  if (_check_json_streamInfo(json_in) != 0)
+  {
+    return -0xFF;
+  }
+
+  // Congrats!
+  return _read_json_streamInfo(json_in, matchSerial);
+}
+
 
 
 
@@ -534,6 +728,7 @@ int _kill_stream()
   return ret;
 }
 
+
 int _create_bufferSystem()
 {
   // Malloc buffer system
@@ -570,6 +765,109 @@ int _clear_bufferSystem()
   return 0;
 }
 
+
+int _read_json_streamInfo(ordered_json& json_in, bool matchSerial)
+{
+  // Make test deviceInfo
+  string testDir = "./temp/";
+  string testFile = "testDeviceInfo";
+  if (fauna_write_json_deviceInfo(testDir, testFile) != 0)
+  {
+    return -0x0201;
+  }
+
+  // Load test file
+  ifstream fin(testDir + testFile + ".json");
+  if (fin.is_open() == false)
+  {
+    return -0x0202;
+  }
+
+  // Test json parsing
+  ordered_json json_test;
+  try
+  {
+    fin >> json_test;
+  }
+  catch (const ordered_json::parse_error& e)
+  {
+    return -0x0203;
+  }
+  catch (const std::exception& e) {
+    return -0x0204;
+  }
+
+  // Let the test begin
+  for (auto& dev : json_in.items())
+  {
+    if (json_test.contains(dev.key()) == false)
+    {
+      fauna_do_clear_streamDevice();
+      return -0x0205;
+    }
+
+    if
+    (
+      (matchSerial == true)
+      && (json_test[dev.key()]["serialCode"] != dev.value()["serialCode"])
+    )
+    {
+      fauna_do_clear_streamDevice();
+      return -0x0206;
+    }
+        
+    if
+    (
+      (json_test[dev.key()]["minSps"] > dev.value()["sps"])
+      || (json_test[dev.key()]["maxSps"] < dev.value()["sps"])
+    )
+    {
+      fauna_do_clear_streamDevice();
+      return -0x0207;
+    }
+
+    if
+    (
+      find(json_test[dev.key()]["listBias"].begin(), json_test[dev.key()]["listBias"].end(), dev.value()["bias"])
+      == json_test[dev.key()]["listBias"].end()
+    )
+    {
+      fauna_do_clear_streamDevice();
+      return -0x0207;
+    }
+    
+    if (json_test[dev.key()]["numChannel"] < dev.value()["numChannel"])
+    {
+      fauna_do_clear_streamDevice();
+      return -0x0208;
+    }
+
+    vector<string> listChan = dev.value()["listChannel"].get<vector<string>>();
+    for (auto& chan : listChan)
+    {
+      if
+      (
+        find(json_test[dev.key()]["listChannel"].begin(), json_test[dev.key()]["listChannel"].begin(), chan)
+        == json_test[dev.key()]["listChannel"].end()
+      )
+      {
+        fauna_do_clear_streamDevice();
+        return -0x0209;
+      }
+    }
+
+    // Insertion
+    string nameDev = dev.key();
+    int ret = fauna_do_insert_streamDevice(nameDev, dev.value()["bias"], dev.value()["sps"], dev.value()["spb"], listChan);
+    if (ret < 0)
+    {
+      return -0x0300 + ret;
+    }
+  }
+
+  return 0;
+}
+
 //==== ==== BUFFER
 
 int __malloc_bufferSystem()
@@ -592,17 +890,65 @@ int __dalloc_bufferSystem()
 {
   for (auto& dev : listStreamChannel)
   {
-    for (string& chan : dev.second)
-    {
-      delete[] buffer_daq[dev.first][0];
-      delete[] buffer_daq[dev.first][1];
-      delete[] buffer_daq[dev.first];
-    }
+    delete[] buffer_daq[dev.first][0];
+    delete[] buffer_daq[dev.first][1];
+    delete[] buffer_daq[dev.first];
   }
   buffer_daq.clear();
   return 0;
 }
 
+//==== Integrity
+
+int _check_json_streamInfo(ordered_json& json_in)
+{
+  for (auto& dev : json_in.items())
+  {
+    // Containment
+    if
+    (
+      dev.value().contains("serialCode") == false
+      || dev.value().contains("spb") == false
+      || dev.value().contains("sps") == false
+      || dev.value().contains("bias") == false
+      || dev.value().contains("numChannel") == false
+      || dev.value().contains("listChannel") == false
+    )
+    {
+      return -0x0101;
+    }
+
+    // Type
+    if
+      (
+        dev.value()["serialCode"].is_string() == false
+        || dev.value()["spb"].is_number_integer() == false
+        || dev.value()["spb"] <= 0
+        || dev.value()["sps"].is_number_float() == false
+        || dev.value()["sps"] <= 0
+        || dev.value()["bias"].is_number_float() == false
+        || dev.value()["bias"] <= 0
+        || dev.value()["numChannel"].is_number_integer() == false
+        || dev.value()["numChannel"] <= 0
+        || dev.value()["listChannel"].is_array() == false
+        || dev.value()["listChannel"].size() != dev.value()["numChannel"]
+        )
+    {
+      return -0x0102;
+    }
+
+    // List elements
+    for (auto& chan : dev.value()["listChannel"])
+    {
+      if (chan.is_string() == false)
+      {
+        return -0x0103;
+      }
+    }
+  } 
+
+  return 0;
+}
 
 //==== THREAD
 
@@ -615,7 +961,6 @@ int _thread_report_buffer(std::string nameDevice)
   
   bool* idxBuffer = &listBufferInfo[nameDevice].idxBuffer;
   TaskHandle* task = &listTaskHandle[nameDevice];
-  vector<string>* listChannel = &listStreamChannel[nameDevice];
   float64** buffer = buffer_daq[nameDevice];
   int32* numSamplesReadPerChannel[2] = { &listBufferInfo[nameDevice].numSampleReadPerChannel[0], &listBufferInfo[nameDevice].numSampleReadPerChannel[1] };
 

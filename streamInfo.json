@@ -1,0 +1,13 @@
+{
+  "cDAQ1Mod1": {
+    "serialCode": "34857162",
+    "spb": 48000,
+    "sps": 48000.0,
+    "bias": 5.0,
+    "numChannel": 2,
+    "listChannel": [
+      "cDAQ1Mod1/ai0",
+      "cDAQ1Mod1/ai1"
+    ]
+  }
+}

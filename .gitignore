@@ -72,16 +72,3 @@ cmake_install.cmake
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# ------------------------
-# 🔍 Optional
-# ------------------------
-# Ignore JSON lib if it's external (e.g., nlohmann)
-# include/json.hpp
-
-# Ignore Visual Studio Code settings (if using)
-.vscode/
-
-# Ignore Qt Creator
-*.pro.user*
-*.qmake.stash
