@@ -1,0 +1,87 @@
+# ------------------------
+# 🔧 Visual Studio Files
+# ------------------------
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ------------------------
+# 🛠️ Build Results
+# ------------------------
+*.obj
+*.dll
+*.exe
+*.lib
+*.pdb
+*.idb
+*.ipdb
+*.iobj
+*.ilk
+*.tlog
+*.log
+*.pch
+*.bsc
+
+# ------------------------
+# 🗃️ Intermediate + Caches
+# ------------------------
+*.cache
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# ------------------------
+# 🧱 Build Directories
+# ------------------------
+Debug/
+Release/
+x64/
+x86/
+build/
+out/
+bin/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+*.dir/
+
+# ------------------------
+# 🧪 Test Results
+# ------------------------
+*.gcno
+*.gcda
+*.gcov
+
+# ------------------------
+# 🧹 Misc
+# ------------------------
+*.log
+*.tmp
+*.bak
+*.swp
+*.swn
+*.swo
+
+# ------------------------
+# 🌍 OS Generated
+# ------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------------------------
+# 🔍 Optional
+# ------------------------
+# Ignore JSON lib if it's external (e.g., nlohmann)
+# include/json.hpp
+
+# Ignore Visual Studio Code settings (if using)
+.vscode/
+
+# Ignore Qt Creator
+*.pro.user*
+*.qmake.stash
