@@ -4,23 +4,30 @@
 #include <algorithm>
 #include <unordered_map>
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <utility>
 #include <thread>
+#include <Windows.h>
 #include <NIDAQmx.h>
 #include "../_include/json.hpp"
 
 #include "typedefFauna.h"
 #include "tb_string.h"
 
+namespace fs = std::filesystem;
+
 using namespace std;
 using ordered_json = nlohmann::ordered_json;
 
 //====----====----====----====----====----====----====----====----VAL
 
-
+#define FAUNA_LOCAL std::string(getenv("LOCALAPPDATA")) + "/Fauna/"
+#define VERSIONINFO "Alpha v2.0.0"
 
 //====----====----====----====----====----====----====----====----VAR
+
+// LOCAL
 
 atomic<int> myState;
 unordered_map<string, STREAMPARAM> listStreamParam;
@@ -32,6 +39,12 @@ vector<thread> listThreadReport;
 
 unordered_map<string, float64**> buffer_daq;
 
+// MMAP
+
+HANDLE handle_file_bufferState = 0;
+HANDLE handle_mapping_bufferState = 0;
+int* mmap_bufferState = 0;
+
 //====----====----====----====----====----====----====----====----FDEC
 
 //==== DAQ TASK
@@ -39,7 +52,7 @@ int _create_DAQTaskset();
 int _clear_DAQTaskset();
 
 //==== STREAM
-int _bear_stream();
+int _bear_stream(int numMmapDev);
 int _kill_stream();
 
 int _create_bufferSystem();
@@ -47,15 +60,22 @@ int _clear_bufferSystem();
 
 int _read_json_streamInfo(ordered_json& json_in, bool matchSerial);
 
+int _write_json_offsetInfo();
+int _init_mmap_bin_bufferState(int numMmapDev);
+
 //==== ==== BUFFER
 int __malloc_bufferSystem();
 int __dalloc_bufferSystem();
 
+int _init_mmap_bin_virtualBuffer(HANDLE* handle_file, HANDLE* handle_mapping, float64** viewer, int spb, int offsetDevice, int offsetChannel);
+
 //==== Integrity
+int _check_struct_streamParam(std::string& nameDevice, STREAMPARAM& streamParam);
 int _check_json_streamInfo(ordered_json& json_in);
 
 //==== THREAD
 int _thread_report_buffer(std::string nameDevice);
+int _thread_report_buffer_mmap(std::string nameDevice, int numMmapDev, int offsetDevice);
 
 //==== INLINE
 inline void _readAnalogF64(TaskHandle& taskHandle, int spb, float64 timeOut, int numChannel, float64* _buffer, int32* _numSamplesRead);
@@ -63,6 +83,12 @@ inline void _readAnalogF64(TaskHandle& taskHandle, int spb, float64 timeOut, int
 //====----====----====----====----====----====----====----====----FDEF
 
 // DLL_EXPORT
+
+int fauna_tell_versionInfo(std::string* _versionInfo)
+{
+  *_versionInfo = VERSIONINFO;
+  return 0;
+}
 
 int fauna_tell_state(int* _state)
 {
@@ -191,7 +217,9 @@ int fauna_tell_serialCode(std::string& nameDevice, std::string* _serialCode)
   return -2;
 }
 
-int fauna_write_json_deviceInfo(std::string& pathDir, std::string& nameFile)
+
+
+int fauna_write_json_deviceInfo(const char* pathDir, const char* nameFile)
 {
   vector<string> listDev;
   if (fauna_tell_listDevice(&listDev) <= 0)
@@ -199,14 +227,19 @@ int fauna_write_json_deviceInfo(std::string& pathDir, std::string& nameFile)
     return 1;
   }
 
-  ordered_json json_out;
-  ofstream fout(pathDir + nameFile + ".json");
+  ofstream fout(string(pathDir) + string(nameFile) + ".json");
 
   if (fout.is_open() == false)
   {
     return -1;
   }
-    
+
+  ordered_json json_out;
+  json_out["versionInfo"] = VERSIONINFO;
+
+  ordered_json json_dev;
+  json_dev["numDevice"] = listDev.size();
+
   for (string dev : listDev)
   {
     ordered_json json_each;
@@ -243,8 +276,9 @@ int fauna_write_json_deviceInfo(std::string& pathDir, std::string& nameFile)
     json_each["listBias"] = listBias;
     json_each["listChannel"] = listChan;
 
-    json_out[dev] = json_each;
+    json_dev["listDevice"][dev] = json_each;
   }
+  json_out["deviceInfo"] = json_dev;
 
   fout << json_out.dump(2);
   return 0;
@@ -265,17 +299,34 @@ int fauna_tell_listStreamDevice(std::vector<std::string>* _listDevice, std::vect
     _listParam->clear();
   }
 
+  // Pairing
+  vector<pair<string, STREAMPARAM>> listPair;
   for (auto& dev : listStreamParam)
+  {
+    listPair.push_back({ dev.first, dev.second });
+  }
+
+  // Sorting
+  sort
+  (
+    listPair.begin(),
+    listPair.end(),
+    [](const auto& a, const auto& b)
+    {
+      return a.first < b.first;
+    }
+  );
+
+  // Division
+  for (auto& dev : listPair)
   {
     _listDevice->push_back(dev.first);
 
     if (_listParam != NULL)
     {
-      _listParam->push_back({ dev.second.bias, dev.second.sps, dev.second.spb });
+      _listParam->push_back(dev.second);
     }
   }
-
-  sort(_listDevice->begin(), _listDevice->end());
 
   return _listDevice->size();
 }
@@ -302,7 +353,7 @@ int fauna_tell_listStreamChannel(std::string& nameDevice, std::vector<std::strin
 
 
 
-int fauna_do_insert_streamDevice(std::string& nameDevice, double customBias, double customSps, int customSpb, std::vector<std::string>& listChannel)
+int fauna_do_insert_streamDevice(std::string& nameDevice, STREAMPARAM& streamParam, std::vector<std::string>& listChannel)
 {
   // State Lock : READY
   if (myState != FAUNA_STATE_READY)
@@ -311,22 +362,18 @@ int fauna_do_insert_streamDevice(std::string& nameDevice, double customBias, dou
   }
 
   // Integrity Check
-  if (customSps <= 0
-    || customSpb <= 0
-    || listChannel.empty()
-    )
+  int ret = _check_struct_streamParam(nameDevice, streamParam);
+  if ((ret != 0) || (listChannel.empty() == true))
   {
-    return -0xFF;
+    return -0xFF00;
   }
-
-  int ret = 0;
 
   // Param insertion
   if (listStreamParam.find(nameDevice) != listStreamParam.end())
   {
     ret += 0x0100;
   }
-  listStreamParam.insert({ nameDevice, { customBias, customSps, customSpb } });
+  listStreamParam.insert({ nameDevice, streamParam });
 
   // Channel insertion
   if (listStreamChannel.find(nameDevice) != listStreamChannel.end())
@@ -381,7 +428,7 @@ int fauna_do_clear_streamDevice()
 
 
 
-int fauna_write_json_streamInfo(std::string& pathDir, std::string& nameFile)
+int fauna_write_json_streamInfo(const char* pathDir, const char* nameFile)
 {
   vector<string> listDev;
   vector<STREAMPARAM> listParam;
@@ -391,13 +438,18 @@ int fauna_write_json_streamInfo(std::string& pathDir, std::string& nameFile)
     return -1;
   }
 
-  ordered_json json_out;
-  ofstream fout(pathDir + nameFile + ".json");
+  ofstream fout(string(pathDir) + string(nameFile) + ".json");
 
   if (fout.is_open() == false)
   {
     return -1;
   }
+
+  ordered_json json_out;
+  json_out["versionInfo"] = VERSIONINFO;
+
+  ordered_json json_dev;
+  json_dev["numDevice"] = listDev.size();
 
   for (int i = 0; i < listDev.size(); i++)
   {
@@ -421,15 +473,17 @@ int fauna_write_json_streamInfo(std::string& pathDir, std::string& nameFile)
     json_each["bias"] = listParam[i].bias;
     json_each["numChannel"] = listChan.size();
     json_each["listChannel"] = listChan;
+    json_each["fileExport"] = listParam[i].fileStream;
 
-    json_out[listDev[i]] = json_each;
+    json_dev["listDevice"][listDev[i]] = json_each;
   }
+  json_out["deviceInfo"] = json_dev;
 
   fout << json_out.dump(2);
   return 0;
 }
 
-int fauna_read_json_streamInfo(std::string& pathDir, std::string& nameFile, bool matchSerial)
+int fauna_read_json_streamInfo(const char* pathFile, bool matchSerial)
 {
   // State Lock : READY
   if (myState != FAUNA_STATE_READY)
@@ -438,7 +492,7 @@ int fauna_read_json_streamInfo(std::string& pathDir, std::string& nameFile, bool
   }
 
   // File open
-  ifstream fin(pathDir + nameFile + ".json");
+  ifstream fin(pathFile);
   if (fin.is_open() == false)
   {
     return -1;
@@ -471,7 +525,8 @@ int fauna_read_json_streamInfo(std::string& pathDir, std::string& nameFile, bool
 
 
 
-int fauna_do_launch_stream()
+
+int fauna_do_launch_stream(bool fileStream)
 {
   int ret = 0;
 
@@ -489,8 +544,38 @@ int fauna_do_launch_stream()
     return -0xFF00 + ret;
   }
 
+  // File export
+  if (fileStream == true)
+  {
+    // Directory creation
+    fs::path path_local_stream = FAUNA_LOCAL + "stream/";
+    fs::remove_all(path_local_stream);
+    fs::create_directories(path_local_stream);
+
+    // Export : streamInfo.json
+    ret = fauna_write_json_streamInfo(path_local_stream.string().c_str(), "streamInfo");
+    if (ret < 0)
+    {
+      return -0x0100 + ret;
+    }
+
+    // offsetInfo.json
+    ret = _write_json_offsetInfo();
+    if (ret < 0)
+    {
+      return -0x0100 + ret;
+    }
+
+    // bufferState.bin
+    ret = _init_mmap_bin_bufferState(ret);
+    if (ret < 0)
+    {
+      return -0x0100 + ret;
+    }
+  }
+
   // Bear a stream
-  ret = _bear_stream();
+  ret = _bear_stream(ret);
   if (ret != 0)
   {
     fauna_do_cease_stream();
@@ -520,6 +605,10 @@ int fauna_do_cease_stream()
 
   // Clear DAQ taskset
   _clear_DAQTaskset();
+
+  // Clear files
+  fs::path path_local_stream = FAUNA_LOCAL + "stream/";
+  fs::remove_all(path_local_stream);
 
   return 0;
 }
@@ -682,23 +771,38 @@ int _clear_DAQTaskset()
 
 //==== STREAM
 
-int _bear_stream()
+int _bear_stream(int numMmapDev)
 {
   // Malloc Buffer system
   _create_bufferSystem();
 
+  vector<string> listDev;
+  vector<STREAMPARAM> listParam;
+  fauna_tell_listStreamDevice(&listDev, &listParam);
+
+  int offset = 0;
+
   // Start Stream
-  for (auto& task : listTaskHandle)
+  for (int i = 0; i < listDev.size(); i++)
   {
     // Start DAQ Task
-    int ret = DAQmxStartTask(task.second);
+    int ret = DAQmxStartTask(listTaskHandle[listDev[i]]);
     if (ret != 0)
     {
       return -1;
     }
 
-    // Create Report Thread
-    listThreadReport.emplace_back(_thread_report_buffer, task.first);
+    // Create Report Threads
+    if (listParam[i].fileStream == true)
+    {
+      listThreadReport.emplace_back(_thread_report_buffer_mmap, listDev[i], numMmapDev, offset);
+      offset++;
+    }
+    else
+    {
+      listThreadReport.emplace_back(_thread_report_buffer, listDev[i]);
+    }
+    
   }
 
   return 0;
@@ -769,15 +873,15 @@ int _clear_bufferSystem()
 int _read_json_streamInfo(ordered_json& json_in, bool matchSerial)
 {
   // Make test deviceInfo
-  string testDir = "./temp/";
-  string testFile = "testDeviceInfo";
-  if (fauna_write_json_deviceInfo(testDir, testFile) != 0)
+  const char* testDir = "./temp/";
+  const char* testFileName = "testDeviceInfo";
+  if (fauna_write_json_deviceInfo(testDir, testFileName) != 0)
   {
     return -0x0201;
   }
 
   // Load test file
-  ifstream fin(testDir + testFile + ".json");
+  ifstream fin(string(testDir) + string(testFileName) + ".json");
   if (fin.is_open() == false)
   {
     return -0x0202;
@@ -798,12 +902,20 @@ int _read_json_streamInfo(ordered_json& json_in, bool matchSerial)
   }
 
   // Let the test begin
-  for (auto& dev : json_in.items())
+
+  // Version Check
+  if (json_test["versionInfo"] != json_in["versionInfo"])
+  {
+    return -0x0205;
+  }
+
+  json_test = json_test["deviceInfo"]["listDevice"];
+  for (auto& dev : json_in["deviceInfo"]["listDevice"].items())
   {
     if (json_test.contains(dev.key()) == false)
     {
       fauna_do_clear_streamDevice();
-      return -0x0205;
+      return -0x0206;
     }
 
     if
@@ -813,7 +925,7 @@ int _read_json_streamInfo(ordered_json& json_in, bool matchSerial)
     )
     {
       fauna_do_clear_streamDevice();
-      return -0x0206;
+      return -0x0207;
     }
         
     if
@@ -823,7 +935,7 @@ int _read_json_streamInfo(ordered_json& json_in, bool matchSerial)
     )
     {
       fauna_do_clear_streamDevice();
-      return -0x0207;
+      return -0x0208;
     }
 
     if
@@ -833,13 +945,13 @@ int _read_json_streamInfo(ordered_json& json_in, bool matchSerial)
     )
     {
       fauna_do_clear_streamDevice();
-      return -0x0207;
+      return -0x0208;
     }
     
     if (json_test[dev.key()]["numChannel"] < dev.value()["numChannel"])
     {
       fauna_do_clear_streamDevice();
-      return -0x0208;
+      return -0x0209;
     }
 
     vector<string> listChan = dev.value()["listChannel"].get<vector<string>>();
@@ -852,18 +964,126 @@ int _read_json_streamInfo(ordered_json& json_in, bool matchSerial)
       )
       {
         fauna_do_clear_streamDevice();
-        return -0x0209;
+        return -0x020A;
       }
     }
 
     // Insertion
     string nameDev = dev.key();
-    int ret = fauna_do_insert_streamDevice(nameDev, dev.value()["bias"], dev.value()["sps"], dev.value()["spb"], listChan);
+    STREAMPARAM param =
+    {
+      dev.value()["bias"],
+      dev.value()["sps"],
+      dev.value()["spb"],
+      dev.value()["fileExport"]
+    };
+
+    int ret = fauna_do_insert_streamDevice(nameDev, param, listChan);
     if (ret < 0)
     {
       return -0x0300 + ret;
     }
   }
+
+  return 0;
+}
+
+
+
+int _write_json_offsetInfo()
+{
+  ofstream fout(FAUNA_LOCAL + "stream/offsetInfo.json");
+
+  if (fout.is_open() == false)
+  {
+    return -1;
+  }
+
+  ordered_json json_out;
+
+  vector<string> listDev;
+  vector<STREAMPARAM> listParam;
+  fauna_tell_listStreamDevice(&listDev, &listParam);
+  json_out["numDevice"] = listDev.size();
+
+  // Count num of mmap devices
+  int num_mmap_dev = 0;
+  for (int i = 0; i < listDev.size(); i++)
+  {
+    if (listParam[i].fileStream == true)
+    {
+      num_mmap_dev++;
+    }    
+  }
+
+  // Calc offsets
+  int cnt_mmap_dev = 0;
+  for (int i = 0; i < listDev.size(); i++)
+  {
+    if (listParam[i].fileStream == true)
+    {
+      ordered_json json_dev;
+      json_dev["idxBuffer"] = cnt_mmap_dev;
+      json_dev["numSamplesReadPerChannel"] = num_mmap_dev + cnt_mmap_dev;
+
+      json_out["listDevice"][listDev[i]] = json_dev;
+      cnt_mmap_dev++;
+    }
+  }
+
+  fout << json_out.dump(2);
+
+  return num_mmap_dev;
+}
+
+int _init_mmap_bin_bufferState(int numMmapDev)
+{
+  // file handle
+  handle_file_bufferState = CreateFile
+  (
+    (FAUNA_LOCAL + "stream/bufferState.bin").data(),
+    GENERIC_READ | GENERIC_WRITE,
+    FILE_SHARE_READ,
+    NULL,
+    CREATE_ALWAYS,
+    FILE_FLAG_RANDOM_ACCESS,
+    NULL
+  );
+
+  if (handle_file_bufferState == 0)
+  {
+    return -1;
+  }
+
+  // mapping handle
+  int64 sizeFile = (numMmapDev * 2) * (sizeof(int));
+  int sizeFile_high = sizeFile >> 32;
+  int sizeFile_low = sizeFile & 0xFFFFFFFF;
+
+  handle_mapping_bufferState = CreateFileMapping
+  (
+    handle_file_bufferState,
+    NULL,
+    PAGE_READWRITE,
+    sizeFile_high,
+    sizeFile_low,
+    "FAUNA_MMAP_BUFFERSTATE"
+  );
+
+  if (handle_mapping_bufferState == 0)
+  {
+    return -2;
+  }
+ 
+  // mmap viewer
+  mmap_bufferState = (int*)MapViewOfFile
+  (
+    handle_mapping_bufferState,
+    FILE_MAP_ALL_ACCESS,
+    0,
+    0,
+    0
+  );
 
   return 0;
 }
@@ -898,13 +1118,107 @@ int __dalloc_bufferSystem()
   return 0;
 }
 
+int _init_mmap_bin_virtualBuffer(HANDLE* handle_file, HANDLE* handle_mapping, float64** viewer, int spb, int offsetDevice, int offsetChannel)
+{
+  // file handle
+  *handle_file = CreateFile
+  (
+    (FAUNA_LOCAL + "stream/buffer/" + "virtualBuffer_" + to_string(offsetDevice) + "_" + to_string(offsetChannel) + ".bin").c_str(),
+    GENERIC_READ | GENERIC_WRITE,
+    FILE_SHARE_READ | FILE_SHARE_WRITE,
+    NULL,
+    CREATE_ALWAYS,
+    FILE_FLAG_RANDOM_ACCESS,
+    NULL
+  );
+
+  if (*handle_file == 0)
+  {
+    return -1;
+  }
+
+  // mapping handle
+  int64 sizeFile = (spb * 2) * (sizeof(float64));
+  int sizeFile_high = sizeFile >> 32;
+  int sizeFile_low = sizeFile & 0xFFFFFFFF;
+  string nameMap = "FAUNA_MMAP_VIRTUALBUFFER_" + to_string(offsetDevice) + "_" + to_string(offsetChannel);
+
+  *handle_mapping = CreateFileMapping
+  (
+    *handle_file,
+    NULL,
+    PAGE_READWRITE,
+    sizeFile_high,
+    sizeFile_low,
+    nameMap.c_str()
+  );
+
+  if (*handle_mapping == 0)
+  {
+    return -2;
+  }
+
+  // mmap viewer
+  *viewer = (float64*)MapViewOfFile
+  (
+    *handle_mapping,
+    FILE_MAP_ALL_ACCESS,
+    0,
+    0,
+    0
+  );
+
+  return 0;
+}
+
 //==== Integrity
+
+int _check_struct_streamParam(std::string& nameDevice, STREAMPARAM& streamParam)
+{
+  vector<double> listBias;
+  fauna_tell_listBias(nameDevice, &listBias);
+
+  if (find(listBias.begin(), listBias.end(), streamParam.bias) == listBias.end())
+  {
+    return -0x0101;
+  }
+
+  double minSps, maxSps;
+  fauna_tell_rangeSps(nameDevice, &minSps, &maxSps);
+
+  if (streamParam.sps < minSps || streamParam.sps > maxSps)
+  {
+    return -0x0102;
+  }
+
+  // SPB
+  if (streamParam.spb <= 0)
+  {
+    return -0x0103;
+  }
+
+  return 0;
+}
 
 int _check_json_streamInfo(ordered_json& json_in)
 {
-  for (auto& dev : json_in.items())
+  // Version
+  string versionInfo = json_in["versionInfo"];
+  if (versionInfo != VERSIONINFO)
   {
-    // Containment
+    return -0x0100;
+  }
+
+  // Number of devices
+  if (json_in["deviceInfo"]["numDevice"] != json_in["deviceInfo"]["listDevice"].size())
+  {
+    return -0x0101;
+  }
+
+  // For each devices
+  for (auto& dev : json_in["deviceInfo"]["listDevice"].items())
+  {
+    // Key Containment
     if
     (
       dev.value().contains("serialCode") == false
@@ -913,9 +1227,10 @@ int _check_json_streamInfo(ordered_json& json_in)
       || dev.value().contains("bias") == false
       || dev.value().contains("numChannel") == false
       || dev.value().contains("listChannel") == false
+      || dev.value().contains("fileExport") == false
     )
     {
-      return -0x0101;
+      return -0x0102;
     }
 
     // Type
@@ -932,9 +1247,10 @@ int _check_json_streamInfo(ordered_json& json_in)
         || dev.value()["numChannel"] <= 0
         || dev.value()["listChannel"].is_array() == false
         || dev.value()["listChannel"].size() != dev.value()["numChannel"]
+        || dev.value()["fileExport"].is_boolean() == false
         )
     {
-      return -0x0102;
+      return -0x0103;
     }
 
     // List elements
@@ -942,7 +1258,7 @@ int _check_json_streamInfo(ordered_json& json_in)
     {
       if (chan.is_string() == false)
       {
-        return -0x0103;
+        return -0x0104;
       }
     }
   } 
@@ -976,6 +1292,66 @@ int _thread_report_buffer(std::string nameDevice)
     // READ
     _readAnalogF64(*task, spb, timeOut, numChannel, buffer[*idxBuffer], numSamplesReadPerChannel[*idxBuffer]);
   }
+
+  return 0;
+}
+
+int _thread_report_buffer_mmap(std::string nameDevice, int numMmapDev, int offsetDevice)
+{
+  // Localize factors
+  int spb = listStreamParam[nameDevice].spb;
+  float64 timeOut = listBufferInfo[nameDevice].timeOut;
+  int numChannel = listStreamChannel[nameDevice].size();
+
+  bool* idxBuffer = &listBufferInfo[nameDevice].idxBuffer;
+  TaskHandle* task = &listTaskHandle[nameDevice];
+  float64** buffer = buffer_daq[nameDevice];
+  int32* numSamplesReadPerChannel[2] = { &listBufferInfo[nameDevice].numSampleReadPerChannel[0], &listBufferInfo[nameDevice].numSampleReadPerChannel[1] };
+
+  // Directory creation
+  fs::path path_local_stream_buffer = FAUNA_LOCAL + "stream/buffer/";
+  fs::create_directories(path_local_stream_buffer);
+
+  // MMAP initilization
+  HANDLE* list_handle_file = new HANDLE[numChannel]();
+  HANDLE* list_handle_mapping = new HANDLE [numChannel]();
+  float64** list_mmap_buffer = new float64* [numChannel]();
+
+  for (int i = 0; i < numChannel; i++)
+  { 
+    _init_mmap_bin_virtualBuffer(&list_handle_file[i], &list_handle_mapping[i], &list_mmap_buffer[i], spb, offsetDevice, i);
+  }  
+
+  // Synchronize all threads
+  while (myState == FAUNA_STATE_READY) {}
+
+  // DAQ loop
+  while (myState == FAUNA_STATE_RUNNING)
+  {
+    // BufferSwitch
+    *idxBuffer = !(*idxBuffer);
+
+    // READ
+    _readAnalogF64(*task, spb, timeOut, numChannel, buffer[*idxBuffer], numSamplesReadPerChannel[*idxBuffer]);
+
+    // MMAP : bufferState.bin
+    *(mmap_bufferState + offsetDevice) = (int)(*idxBuffer);
+    *(mmap_bufferState + numMmapDev + offsetDevice + 1) = (int)(*numSamplesReadPerChannel[*idxBuffer]);
+
+    // MMAP : buffer instance
+    for (int i = 0; i < numChannel; i++)
+    {
+      float64* dest = list_mmap_buffer[i] + (*idxBuffer == 0 ? 0 : spb);
+      float64* src = buffer[*idxBuffer];
+
+      memcpy(dest, src, (spb * sizeof(float64)));
+    }
+  }
+
+  // dalloc
+  delete[] list_handle_file;
+  delete[] list_handle_mapping;
+  delete[] list_mmap_buffer;
 
   return 0;
 }

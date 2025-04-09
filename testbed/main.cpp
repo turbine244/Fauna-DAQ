@@ -13,9 +13,11 @@ using namespace std;
 string dir = "../";
 int scenario1(); // Mere Showcase
 int scenario2(); // Quicktest : Load via file
+//int scenario3(); // Quicktest : Load via file
 
 int main()
 {
+  //fauna_write_json_deviceInfo(dir.c_str(), "deviceInfo");
   return scenario1();
 }
 
@@ -26,8 +28,8 @@ int scenario1()
 
   // fauna_write_json_deviceInfo
   cout << "!! Writing deviceInfo.json on : " << dir << endl;
-  fileName = "deviceInfo";
-  ret = fauna_write_json_deviceInfo(dir, fileName);
+  fileName = "deviceInfo.json";
+  ret = fauna_write_json_deviceInfo(dir.c_str(), fileName.c_str());
   if (ret == 0)
   {
     cout << "Success!" << endl;
@@ -93,6 +95,14 @@ int scenario1()
   }
   cout << endl;
 
+  STREAMPARAM streamParam =
+  {
+    biasForTest,
+    SPS,
+    SPB,
+    true
+  };
+
   // fauna_do_insert_streamDevice
   cout << "!! Device-Stream engagemnet : " << endl;
   for (string dev : listDevice)
@@ -100,7 +110,7 @@ int scenario1()
     vector<string> listChannel = {};
     fauna_tell_listChannel(dev, &listChannel);
 
-    int ret = fauna_do_insert_streamDevice(dev, biasForTest, SPS, SPB, listChannel);
+    int ret = fauna_do_insert_streamDevice(dev, streamParam, listChannel);
     if (ret == 0)
     {
       cout << dev << " engaged successfully." << endl;
@@ -157,7 +167,7 @@ int scenario1()
     vector<string> listChannel = {};
     fauna_tell_listChannel(listDevice[0], &listChannel);
 
-    int ret = fauna_do_insert_streamDevice(listDevice[0], biasForTest, SPS, SPB, listChannel);
+    int ret = fauna_do_insert_streamDevice(listDevice[0], streamParam, listChannel);
     if (ret == 0)
     {
       cout << listDevice[0] << " re-engaged successfully." << endl;
@@ -178,7 +188,7 @@ int scenario1()
   // fauna_write_json_deviceInfo
   cout << "!! Writing streamInfo.json on : " << dir << endl;
   fileName = "streamInfo";
-  ret = fauna_write_json_streamInfo(dir, fileName);
+  ret = fauna_write_json_streamInfo(dir.c_str(), fileName.c_str());
   if (ret == 0)
   {
     cout << "Success!" << endl;
@@ -192,7 +202,7 @@ int scenario1()
 
   // fauna_do_launch_stream
   cout << "!! Launching Stream" << endl;
-  ret = fauna_do_launch_stream();
+  ret = fauna_do_launch_stream(true);
   if (ret == 0)
   {
     cout << "Stream Launched Successfully!" << endl;
@@ -230,9 +240,18 @@ int scenario1()
       fauna_tell_state(&stateCode);
     }
 
-    int secCnt = 1;
+    int secCnt = 10;
     while (secCnt--)
     {
+      int state;
+      while (true)
+      {
+        fauna_tell_state(&state);
+        if (state == FAUNA_STATE_RUNNING)
+        {
+          break;
+        }
+      }
       fauna_tell_buffer(listDevice[0], 0, retailBuffer, &numSamplesRead);
       cout << retailBuffer[0] << endl;
 
@@ -251,7 +270,7 @@ int scenario1()
   {
     ret = fauna_do_cease_stream();
 
-    if (ret)
+    if (ret != 0)
     {
       cout << "Stream ceased Successfully!" << endl;
     }
@@ -268,6 +287,5 @@ int scenario1()
 
 int scenario2()
 {
-  string fileName = "streamInfo";
-  return fauna_read_json_streamInfo(dir, fileName, false);
+  return fauna_read_json_streamInfo((dir + "streamInfo.json").c_str(), false);
 }

@@ -12,8 +12,6 @@
 
 enum
 {
-  FAUNA_AUTO = 0,
-
   FAUNA_STATE_READY = 0,
   FAUNA_STATE_RUNNING,
 };
@@ -23,11 +21,13 @@ typedef struct STREAMPARAM
   double bias;
   double sps;
   int spb;
+  bool fileStream;
 };
 
 // DLL EXPORT
 
 // -1
+extern "C" FAUNA_DECLSPEC int fauna_tell_versionInfo(std::string* _versionInfo);
 extern "C" FAUNA_DECLSPEC int fauna_tell_state(int* _state);
 
 // 0
@@ -38,24 +38,20 @@ extern "C" FAUNA_DECLSPEC int fauna_tell_rangeSps(std::string& nameDevice, doubl
 extern "C" FAUNA_DECLSPEC int fauna_tell_listBias(std::string& nameDevice, std::vector<double>* _listBias);
 extern "C" FAUNA_DECLSPEC int fauna_tell_serialCode(std::string& nameDevice, std::string* _serialCode);
 
-extern "C" FAUNA_DECLSPEC int fauna_write_json_deviceInfo(std::string& pathDir, std::string& nameFile);
+extern "C" FAUNA_DECLSPEC int fauna_write_json_deviceInfo(const char* pathDir, const char* nameFile);
 
 // 1
 extern "C" FAUNA_DECLSPEC int fauna_tell_listStreamDevice(std::vector<std::string>* _listDevice, std::vector<STREAMPARAM>* _listParam);
 extern "C" FAUNA_DECLSPEC int fauna_tell_listStreamChannel(std::string& nameDevice, std::vector<std::string>* _listChannel);
 
-extern "C" FAUNA_DECLSPEC int fauna_do_insert_streamDevice(std::string& nameDevice, double customBias, double customSps, int customSpb, std::vector<std::string>& listChannel);
+extern "C" FAUNA_DECLSPEC int fauna_do_insert_streamDevice(std::string& nameDevice, STREAMPARAM& streamParam, std::vector<std::string>& listChannel);
 extern "C" FAUNA_DECLSPEC int fauna_do_erase_streamDevice(std::string& nameDevice);
 extern "C" FAUNA_DECLSPEC int fauna_do_clear_streamDevice();
 
-//extern "C" FAUNA_DECLSPEC int fauna_do_insert_mmapBuffer(std::string& nameDevice, std::vector<std::string>& listChannel);
-//extern "C" FAUNA_DECLSPEC int fauna_do_erase_mmapBuffer(std::string& nameDevice);
-//extern "C" FAUNA_DECLSPEC int fauna_do_clear_mmapBuffer();
+extern "C" FAUNA_DECLSPEC int fauna_write_json_streamInfo(const char* pathDir, const char* nameFile);
+extern "C" FAUNA_DECLSPEC int fauna_read_json_streamInfo(const char* pathFile, bool matchSerial);
 
-extern "C" FAUNA_DECLSPEC int fauna_write_json_streamInfo(std::string& pathDir, std::string& nameFile);
-extern "C" FAUNA_DECLSPEC int fauna_read_json_streamInfo(std::string& pathDir, std::string& nameFile, bool matchSerial);
-
-extern "C" FAUNA_DECLSPEC int fauna_do_launch_stream();
+extern "C" FAUNA_DECLSPEC int fauna_do_launch_stream(bool fileStream);
 
 
 // 2

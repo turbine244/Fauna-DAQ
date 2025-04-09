@@ -1,13 +1,20 @@
 {
-  "cDAQ1Mod1": {
-    "serialCode": "34857162",
-    "spb": 48000,
-    "sps": 48000.0,
-    "bias": 5.0,
-    "numChannel": 2,
-    "listChannel": [
-      "cDAQ1Mod1/ai0",
-      "cDAQ1Mod1/ai1"
-    ]
+  "versionInfo": "Alpha v2.0.0",
+  "deviceInfo": {
+    "numDevice": 1,
+    "listDevice": {
+      "cDAQ1Mod1": {
+        "serialCode": "34857162",
+        "spb": 48000,
+        "sps": 48000.0,
+        "bias": 5.0,
+        "numChannel": 2,
+        "listChannel": [
+          "cDAQ1Mod1/ai0",
+          "cDAQ1Mod1/ai1"
+        ],
+        "fileExport": true
+      }
+    }
   }
 }

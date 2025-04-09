@@ -1,16 +1,22 @@
 {
-  "cDAQ1Mod1": {
-    "serialCode": "34857162",
-    "minSps": 266.6666666666667,
-    "maxSps": 102400.0,
-    "numBias": 1,
-    "numChannel": 2,
-    "listBias": [
-      5.0
-    ],
-    "listChannel": [
-      "cDAQ1Mod1/ai0",
-      "cDAQ1Mod1/ai1"
-    ]
+  "versionInfo": "Alpha v2.0.0",
+  "deviceInfo": {
+    "numDevice": 1,
+    "listDevice": {
+      "cDAQ1Mod1": {
+        "serialCode": "34857162",
+        "minSps": 266.6666666666667,
+        "maxSps": 102400.0,
+        "numBias": 1,
+        "numChannel": 2,
+        "listBias": [
+          5.0
+        ],
+        "listChannel": [
+          "cDAQ1Mod1/ai0",
+          "cDAQ1Mod1/ai1"
+        ]
+      }
+    }
   }
 }
