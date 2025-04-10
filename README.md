@@ -1,6 +1,6 @@
 # Fauna : DAQ task handler
 
-~ Written in C++ (ISO 14 std)<br>
+~ Written in C++ (ISO 17 std)<br>
 ~ Project form : vcxproj (Visual Stidio 2022)<br>
 ~ Release form : DLL<br>
 
